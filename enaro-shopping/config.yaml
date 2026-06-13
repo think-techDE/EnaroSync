@@ -1,0 +1,22 @@
+name: Enaro Shopping Integration
+description: Installiert die Enaro Shopping Integration fuer eigene Home-Assistant-To-do-Listen pro Enaro-Haushalt
+version: "0.1.0"
+slug: enaro_shopping
+init: false
+startup: once
+boot: manual
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+homeassistant_api: true
+panel_icon: mdi:cart-outline
+map:
+  - config:rw
+options:
+  log_level: info
+  restart_homeassistant: false
+schema:
+  log_level: list(debug|info|warning|error|critical)
+  restart_homeassistant: bool

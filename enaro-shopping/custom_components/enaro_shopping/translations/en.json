@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Enaro Shopping",
+        "description": "Connect your Enaro account. Home Assistant will create one to-do list entity per Enaro household.",
+        "data": {
+          "api_base_url": "Enaro API URL",
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to Enaro or credentials were rejected.",
+      "invalid_auth": "Enaro credentials are invalid.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This Enaro account is already configured"
+    }
+  }
+}
