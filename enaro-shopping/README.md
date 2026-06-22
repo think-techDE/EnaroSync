@@ -42,7 +42,9 @@ restart_homeassistant: false
 
 - `restart_homeassistant`: Wenn `true`, loest das Add-on nach dem Kopieren der
   Integration einen Home-Assistant-Neustart aus. Standard bleibt `false`, damit
-  nichts unerwartet neu startet.
+  nichts unerwartet neu startet. Wenn der automatische Neustart deaktiviert
+  bleibt, erstellt das Add-on stattdessen eine sichtbare Home-Assistant-
+  Benachrichtigung mit Neustart-Hinweis.
 
 ## Verhalten der Integration
 
@@ -53,6 +55,8 @@ restart_homeassistant: false
   gepflegt.
 - Sensorregeln erscheinen zusaetzlich als Home-Assistant-Entitaeten: ein
   Status-Sensor und ein Aktivieren/Deaktivieren-Schalter pro Regel.
+- Sensorregeln koennen einen Anzeigenamen/Alias bekommen, damit die Geraete-
+  und Entitaetsansicht nicht mit langen technischen Entity-IDs gefuellt wird.
 - Pro Sensorregel wird nach 5 Minuten stabilem Zielzustand genau eine
   Enaro-Aufgabe fuer den gewaehlten Stoerfall erstellt.
 - Wenn der Zielzustand beim Einrichten bereits besteht, wird `last_changed` der
@@ -66,6 +70,7 @@ restart_homeassistant: false
 Eine Regel besteht aus:
 
 - Home-Assistant-Entity, z. B. Rauchmelder-Sensor
+- Anzeigename/Alias fuer uebersichtliche Home-Assistant-Entitaeten
 - Zielzustand aus den fuer diese Entity beobachteten Zustaenden, z. B.
   `unavailable`
 - Enaro-Haushalt

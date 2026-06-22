@@ -10,6 +10,20 @@ OLD_TARGET="/config/custom_components/.enaro_shopping.old"
 
 bashio::log.info "Installiere Enaro Integration..."
 
+create_restart_notification() {
+  local message
+  message="Die Enaro Integration wurde installiert oder aktualisiert. Bitte Home Assistant neu starten, damit neue Plattformen, Entitaeten und Optionen geladen werden. Wenn das kuenftig automatisch passieren soll, aktiviere im Add-on die Option restart_homeassistant."
+
+  curl -fsS -X POST \
+    -H "Authorization: Bearer ${SUPERVISOR_TOKEN}" \
+    -H "Content-Type: application/json" \
+    -d "{\"title\":\"Enaro Integration aktualisiert\",\"message\":\"${message}\",\"notification_id\":\"enaro_integration_restart_required\"}" \
+    "http://supervisor/core/api/services/persistent_notification/create" >/dev/null || {
+      bashio::log.warning "Home-Assistant-Neustart-Hinweis konnte nicht als Benachrichtigung erstellt werden."
+      return 1
+    }
+}
+
 if [ ! -d "${SOURCE}" ]; then
   bashio::log.fatal "Integrationsquelle fehlt: ${SOURCE}"
   exit 1
@@ -45,5 +59,6 @@ if [ "${RESTART_HOMEASSISTANT}" = "true" ]; then
       exit 1
     }
 else
-  bashio::log.info "Bitte Home Assistant neu starten und danach unter Einstellungen > Geraete & Dienste die Integration 'Enaro Integration' hinzufuegen."
+  bashio::log.warning "Bitte Home Assistant neu starten, damit die Enaro Integration vollstaendig geladen wird."
+  create_restart_notification || true
 fi

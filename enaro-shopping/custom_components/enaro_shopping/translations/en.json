@@ -27,6 +27,7 @@
         "description": "Configured sensor rules: {rule_count}",
         "menu_options": {
           "add_rule": "Add sensor rule",
+          "rename_rule": "Rename sensor rule",
           "toggle_rule": "Enable or disable sensor rule",
           "remove_rule": "Remove sensor rule"
         }
@@ -49,12 +50,21 @@
         "title": "Sensor rule details",
         "description": "Choose one of the states observed for this entity. Home Assistant creates one Enaro task after the entity stays in that target state for 5 minutes.",
         "data": {
+          "alias": "Display name",
           "enabled": "Enabled",
           "target_state": "Target state",
           "member_id": "Assigned Enaro member",
           "important": "Create as important task",
           "title_template": "Task title",
           "notes_template": "Task note"
+        }
+      },
+      "rename_rule": {
+        "title": "Rename Enaro sensor rule",
+        "description": "The display name is used for this sensor rule's Home Assistant entities and lists.",
+        "data": {
+          "id": "Sensor rule",
+          "alias": "Display name"
         }
       },
       "remove_rule": {

@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from .const import (
+    CONF_RULE_ALIAS,
     CONF_RULE_ENABLED,
     CONF_RULE_ENTITY_ID,
     CONF_RULE_HOUSEHOLD_ID,
@@ -62,7 +63,7 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
         self._rule = rule
         self._rule_id = str(rule[CONF_RULE_ID])
         entity_name = _friendly_entity_name(hass, rule)
-        self._attr_name = f"Sensorregel {entity_name}"
+        self._attr_name = f"{entity_name} Status"
         self._attr_unique_id = f"{DOMAIN}_{entry.entry_id}_sensor_rule_{self._rule_id}_status"
         self.entity_id = f"sensor.enaro_sensorregel_{slugify(entity_name)}"
 
@@ -107,6 +108,7 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
         runtime = self._runtime_state
         return {
             "enabled": self._enabled,
+            "alias": self._rule.get(CONF_RULE_ALIAS),
             "watched_entity_id": self._rule.get(CONF_RULE_ENTITY_ID),
             "watched_entity_name": watched.name if watched is not None else None,
             "current_state": watched.state if watched is not None else None,
@@ -130,6 +132,8 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
+            "sw_version": "0.2.7",
+            "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 
     @property
@@ -142,6 +146,8 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
 
 
 def _friendly_entity_name(hass: HomeAssistant, rule: dict[str, Any]) -> str:
+    if alias := str(rule.get(CONF_RULE_ALIAS) or "").strip():
+        return alias
     entity_id = str(rule.get(CONF_RULE_ENTITY_ID) or "Sensor")
     if (state := hass.states.get(entity_id)) is not None:
         return state.name or entity_id

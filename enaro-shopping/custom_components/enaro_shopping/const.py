@@ -11,6 +11,7 @@ CONF_EMAIL = "email"
 CONF_PASSWORD = "password"
 CONF_SENSOR_RULES = "sensor_rules"
 
+CONF_RULE_ALIAS = "alias"
 CONF_RULE_ENABLED = "enabled"
 CONF_RULE_ENTITY_ID = "entity_id"
 CONF_RULE_HOUSEHOLD_ID = "household_id"

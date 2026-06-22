@@ -27,6 +27,7 @@
         "description": "Konfigurierte Sensorregeln: {rule_count}",
         "menu_options": {
           "add_rule": "Sensorregel hinzufuegen",
+          "rename_rule": "Sensorregel umbenennen",
           "toggle_rule": "Sensorregel aktivieren oder deaktivieren",
           "remove_rule": "Sensorregel entfernen"
         }
@@ -49,12 +50,21 @@
         "title": "Details der Sensorregel",
         "description": "Waehle einen Zustand, der fuer diese Entity beobachtet wurde. Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten in diesem Zielzustand bleibt.",
         "data": {
+          "alias": "Anzeigename",
           "enabled": "Aktiviert",
           "target_state": "Zielzustand",
           "member_id": "Zustaendiges Enaro-Mitglied",
           "important": "Als wichtige Aufgabe erstellen",
           "title_template": "Aufgabentitel",
           "notes_template": "Aufgabennotiz"
+        }
+      },
+      "rename_rule": {
+        "title": "Enaro Sensorregel umbenennen",
+        "description": "Der Anzeigename wird fuer die Home-Assistant-Entitaeten und Listen der Sensorregel verwendet.",
+        "data": {
+          "id": "Sensorregel",
+          "alias": "Anzeigename"
         }
       },
       "remove_rule": {

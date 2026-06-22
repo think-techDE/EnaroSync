@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.2.7
+
+- Sensorregeln unterstuetzen jetzt einen Anzeigenamen/Alias.
+- Neue und bestehende Sensorregeln koennen in den Optionen umbenannt werden.
+- Die Sensorregel-Entitaeten nutzen den Alias fuer uebersichtlichere Namen in
+  Geraete- und Entitaetsansichten.
+- Brand-Bilddateien wurden fuer Home-Assistant-Ansichten groesser und
+  kompatibler erzeugt.
+
+## 0.2.6
+
+- Das Add-on erstellt nach Installation oder Update jetzt eine sichtbare
+  Home-Assistant-Benachrichtigung, wenn ein Neustart erforderlich ist.
+- Wenn `restart_homeassistant` aktiviert ist, bleibt der automatische Neustart
+  erhalten; andernfalls wird der Neustart nicht erzwungen.
+
 ## 0.2.5
 
 - Sensorregeln erscheinen jetzt als Home-Assistant-Entitaeten unter der Enaro

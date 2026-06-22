@@ -6,5 +6,5 @@
   "documentation": "https://github.com/think-techDE/EnaroSync",
   "iot_class": "cloud_polling",
   "requirements": [],
-  "version": "0.2.5"
+  "version": "0.2.7"
 }

@@ -40,10 +40,13 @@ Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
 verwaltet.
 Jede Sensorregel erscheint zusaetzlich als eigene Home-Assistant-Entitaet: ein
 Status-Sensor und ein Schalter zum Aktivieren oder Deaktivieren.
+Fuer uebersichtliche Geraete- und Entitaetslisten kann jede Sensorregel einen
+Anzeigenamen/Alias bekommen.
 
 Pro Regel werden konfiguriert:
 
 - HA-Entity
+- Anzeigename/Alias
 - Zielzustand aus den fuer diese Entity beobachteten Zustaenden, z. B.
   `unavailable`
 - Enaro-Haushalt

@@ -22,6 +22,7 @@ from .const import (
     CONF_API_BASE_URL,
     CONF_EMAIL,
     CONF_PASSWORD,
+    CONF_RULE_ALIAS,
     CONF_RULE_ENABLED,
     CONF_RULE_ENTITY_ID,
     CONF_RULE_HOUSEHOLD_ID,
@@ -115,6 +116,7 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
         rules = _rules_from_options(self._config_entry.options)
         menu_options = ["add_rule"]
         if rules:
+            menu_options.append("rename_rule")
             menu_options.append("toggle_rule")
             menu_options.append("remove_rule")
         return self.async_show_menu(
@@ -201,6 +203,8 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None and not errors:
             rule = {
                 CONF_RULE_ID: uuid4().hex,
+                CONF_RULE_ALIAS: user_input[CONF_RULE_ALIAS].strip()
+                or _entity_display_name(self.hass, self._selected_entity_id),
                 CONF_RULE_ENABLED: user_input[CONF_RULE_ENABLED],
                 CONF_RULE_ENTITY_ID: self._selected_entity_id,
                 CONF_RULE_HOUSEHOLD_ID: self._selected_household_id,
@@ -228,6 +232,13 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
             step_id="add_rule_details",
             data_schema=vol.Schema(
                 {
+                    vol.Required(
+                        CONF_RULE_ALIAS,
+                        default=_entity_display_name(
+                            self.hass,
+                            self._selected_entity_id,
+                        ),
+                    ): str,
                     vol.Required(CONF_RULE_ENABLED, default=True): bool,
                     vol.Required(CONF_RULE_TARGET_STATE): _target_state_schema(
                         observed_states
@@ -253,6 +264,46 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
                 }
             ),
             errors=errors,
+        )
+
+    async def async_step_rename_rule(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Set a friendly alias for a configured sensor rule."""
+        rules = _rules_from_options(self._config_entry.options)
+        if user_input is not None:
+            rule_id = user_input[CONF_RULE_ID]
+            options = dict(self._config_entry.options)
+            updated_rules = []
+            for rule in rules:
+                updated_rule = dict(rule)
+                if updated_rule.get(CONF_RULE_ID) == rule_id:
+                    alias = str(user_input[CONF_RULE_ALIAS]).strip()
+                    if alias:
+                        updated_rule[CONF_RULE_ALIAS] = alias
+                    else:
+                        updated_rule.pop(CONF_RULE_ALIAS, None)
+                updated_rules.append(updated_rule)
+            options[CONF_SENSOR_RULES] = updated_rules
+            return self.async_create_entry(title="", data=options)
+
+        return self.async_show_form(
+            step_id="rename_rule",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_RULE_ID): _select_schema(
+                        [
+                            selector.SelectOptionDict(
+                                value=str(rule[CONF_RULE_ID]),
+                                label=_rule_label(rule),
+                            )
+                            for rule in rules
+                        ]
+                    ),
+                    vol.Required(CONF_RULE_ALIAS): str,
+                }
+            ),
         )
 
     async def async_step_remove_rule(
@@ -376,12 +427,20 @@ def _rules_from_options(options: Mapping[str, Any]) -> list[dict[str, Any]]:
 
 
 def _rule_label(rule: dict[str, Any]) -> str:
+    alias = str(rule.get(CONF_RULE_ALIAS) or "").strip()
     entity_id = str(rule.get(CONF_RULE_ENTITY_ID) or "Sensor")
     target_state = str(rule.get(CONF_RULE_TARGET_STATE) or "")
     title = str(rule.get(CONF_RULE_TITLE_TEMPLATE) or entity_id)
     enabled = bool(rule.get(CONF_RULE_ENABLED, True))
     prefix = "Aktiv" if enabled else "Inaktiv"
-    return f"{prefix}: {entity_id} = {target_state} -> {title}"
+    name = alias or entity_id
+    return f"{prefix}: {name} = {target_state} -> {title}"
+
+
+def _entity_display_name(hass, entity_id: str) -> str:
+    if (state := hass.states.get(entity_id)) is not None:
+        return state.name or entity_id
+    return entity_id
 
 
 async def _async_history_states(hass, entity_id: str) -> list[str]:
