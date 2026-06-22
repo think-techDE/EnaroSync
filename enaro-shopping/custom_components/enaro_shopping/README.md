@@ -58,6 +58,10 @@ Die Integration erstellt erst nach 5 Minuten stabilem Zielzustand eine Aufgabe
 und nur einmal pro Stoerfall. Eine neue Aufgabe entsteht erst wieder, nachdem
 die Entity den Zielzustand verlassen und spaeter erneut erreicht hat.
 
+Wenn die Entity beim Einrichten oder Neustart bereits im Zielzustand ist, wird
+`last_changed` beruecksichtigt. Besteht der Zustand schon laenger als 5 Minuten,
+wird die Aufgabe direkt erstellt; andernfalls nach der verbleibenden Wartezeit.
+
 ## Warum Add-on plus Integration?
 
 Home-Assistant-To-do-Listen sind Entitaeten, die von Integrationen

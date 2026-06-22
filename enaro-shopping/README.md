@@ -53,6 +53,9 @@ restart_homeassistant: false
   gepflegt.
 - Pro Sensorregel wird nach 5 Minuten stabilem Zielzustand genau eine
   Enaro-Aufgabe fuer den gewaehlten Stoerfall erstellt.
+- Wenn der Zielzustand beim Einrichten bereits besteht, wird `last_changed` der
+  Entity beruecksichtigt. Besteht der Zustand schon laenger als 5 Minuten, wird
+  die Aufgabe direkt erstellt; andernfalls nach der verbleibenden Wartezeit.
 - Enaro bleibt Quelle fuer Haushalte, Rechte, Einkaufslisten und Aufgaben.
 - Die Einkaufslisten-Integration pollt aktuell alle 60 Sekunden.
 
@@ -73,6 +76,10 @@ ausgewaehlten Entity. Wenn Home Assistant Recorder/History aktiv ist, werden
 zusaetzlich die in den letzten 14 Tagen gespeicherten Zustaende ausgewertet und
 als Auswahl angeboten. Falls keine Historie vorhanden ist, bleibt eine freie
 Eingabe moeglich.
+
+Ist die Entity beim Einrichten bereits im Zielzustand, startet die Regel nicht
+erst beim naechsten Zustandswechsel. Home Assistant nutzt `last_changed`, um die
+5-Minuten-Wartezeit korrekt anzurechnen.
 
 Vorlagen koennen diese Platzhalter nutzen:
 

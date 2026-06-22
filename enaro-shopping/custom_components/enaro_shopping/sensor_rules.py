@@ -68,6 +68,7 @@ class EnaroSensorRuleManager:
 
         rules = _configured_rules(self.entry.options)
         self._initialize_rule_states(rules)
+        self._schedule_matching_existing_states(rules)
         await self._async_save()
 
         entity_ids = sorted({rule[CONF_RULE_ENTITY_ID] for rule in rules})
@@ -148,7 +149,11 @@ class EnaroSensorRuleManager:
             self._timer_unsubs.pop(rule_id, None)
             self.hass.async_create_task(self._async_fire_rule(rule_id))
 
-        self._timer_unsubs[rule_id] = async_call_later(self.hass, delay, _fire)
+        self._timer_unsubs[rule_id] = async_call_later(
+            self.hass,
+            max(0, delay),
+            _fire,
+        )
 
     def _cancel_timer(self, rule_id: str) -> None:
         unsubscribe = self._timer_unsubs.pop(rule_id, None)
@@ -241,6 +246,22 @@ class EnaroSensorRuleManager:
                     }
                 )
 
+    def _schedule_matching_existing_states(self, rules: list[dict[str, Any]]) -> None:
+        for rule in rules:
+            rule_id = rule[CONF_RULE_ID]
+            state = self.hass.states.get(rule[CONF_RULE_ENTITY_ID])
+            rule_state = self._rule_states.setdefault(rule_id, {})
+            if (
+                state is None
+                or not _state_matches(state, rule)
+                or rule_state.get("task_created")
+            ):
+                continue
+            self._schedule_rule(
+                rule_id,
+                _remaining_debounce_seconds(state, datetime.now(UTC)),
+            )
+
     async def _async_save(self) -> None:
         await self._store.async_save({"rules": self._rule_states})
 
@@ -273,6 +294,14 @@ def _rule_by_id(rules: list[dict[str, Any]], rule_id: str) -> dict[str, Any] | N
 
 def _state_matches(state: State, rule: dict[str, Any]) -> bool:
     return state.state == str(rule[CONF_RULE_TARGET_STATE]).strip()
+
+
+def _remaining_debounce_seconds(state: State, now: datetime) -> int:
+    last_changed = state.last_changed
+    if last_changed.tzinfo is None:
+        last_changed = last_changed.replace(tzinfo=UTC)
+    age_seconds = max(0, int((now - last_changed.astimezone(UTC)).total_seconds()))
+    return max(0, SENSOR_RULE_DEBOUNCE_SECONDS - age_seconds)
 
 
 def _render_template(

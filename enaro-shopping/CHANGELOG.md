@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.2
+
+- Sensorregeln beruecksichtigen jetzt auch Zielzustaende, die beim Einrichten
+  oder Neustart bereits bestehen.
+- Wenn der Zustand schon laenger als die Debounce-Zeit besteht, wird die
+  Enaro-Aufgabe direkt nach dem Laden der Integration erstellt; sonst nach der
+  verbleibenden Debounce-Zeit.
+
 ## 0.2.1
 
 - Sensorregeln schlagen Zielzustaende jetzt aus den zuletzt beobachteten
