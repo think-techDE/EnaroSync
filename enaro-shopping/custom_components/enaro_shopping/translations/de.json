@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Enaro Integration",
+        "description": "Verbinde dein Enaro-Konto. Home Assistant erstellt pro Enaro-Haushalt eine eigene To-do-Liste und kann aus Sensorregeln Enaro-Aufgaben erstellen.",
+        "data": {
+          "api_base_url": "Enaro API-URL",
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Enaro konnte nicht erreicht werden oder die Zugangsdaten wurden abgelehnt.",
+      "invalid_auth": "Die Enaro-Zugangsdaten sind ungueltig.",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "abort": {
+      "already_configured": "Dieses Enaro-Konto ist bereits eingerichtet"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Enaro Integration Optionen",
+        "description": "Konfigurierte Sensorregeln: {rule_count}",
+        "menu_options": {
+          "add_rule": "Sensorregel hinzufuegen",
+          "toggle_rule": "Sensorregel aktivieren oder deaktivieren",
+          "remove_rule": "Sensorregel entfernen"
+        }
+      },
+      "add_rule": {
+        "title": "Enaro Sensorregel hinzufuegen",
+        "description": "Waehle den Enaro-Haushalt fuer die Aufgabe, die erstellt werden soll.",
+        "data": {
+          "household_id": "Enaro-Haushalt"
+        }
+      },
+      "add_rule_details": {
+        "title": "Details der Sensorregel",
+        "description": "Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten im Zielzustand bleibt.",
+        "data": {
+          "enabled": "Aktiviert",
+          "entity_id": "Home-Assistant-Entity",
+          "target_state": "Zielzustand",
+          "member_id": "Zustaendiges Enaro-Mitglied",
+          "important": "Als wichtige Aufgabe erstellen",
+          "title_template": "Aufgabentitel",
+          "notes_template": "Aufgabennotiz"
+        }
+      },
+      "remove_rule": {
+        "title": "Enaro Sensorregel entfernen",
+        "data": {
+          "id": "Sensorregel"
+        }
+      },
+      "toggle_rule": {
+        "title": "Enaro Sensorregel aktivieren oder deaktivieren",
+        "data": {
+          "id": "Sensorregel",
+          "enabled": "Aktiviert"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Enaro konnte beim Laden der Haushalte oder Mitglieder nicht erreicht werden."
+    }
+  }
+}

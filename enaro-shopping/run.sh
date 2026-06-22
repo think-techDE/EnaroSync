@@ -8,7 +8,7 @@ TARGET="/config/custom_components/enaro_shopping"
 TMP_TARGET="/config/custom_components/.enaro_shopping.tmp"
 OLD_TARGET="/config/custom_components/.enaro_shopping.old"
 
-bashio::log.info "Installiere Enaro Shopping Integration..."
+bashio::log.info "Installiere Enaro Integration..."
 
 if [ ! -d "${SOURCE}" ]; then
   bashio::log.fatal "Integrationsquelle fehlt: ${SOURCE}"
@@ -33,7 +33,7 @@ fi
 mv "${TMP_TARGET}" "${TARGET}"
 rm -rf "${OLD_TARGET}"
 
-bashio::log.info "Enaro Shopping Integration wurde nach ${TARGET} installiert/aktualisiert."
+bashio::log.info "Enaro Integration wurde nach ${TARGET} installiert/aktualisiert."
 
 if [ "${RESTART_HOMEASSISTANT}" = "true" ]; then
   bashio::log.warning "Home Assistant wird neu gestartet, damit die Integration geladen wird..."
@@ -45,5 +45,5 @@ if [ "${RESTART_HOMEASSISTANT}" = "true" ]; then
       exit 1
     }
 else
-  bashio::log.info "Bitte Home Assistant neu starten und danach unter Einstellungen > Geraete & Dienste die Integration 'Enaro Shopping' hinzufuegen."
+  bashio::log.info "Bitte Home Assistant neu starten und danach unter Einstellungen > Geraete & Dienste die Integration 'Enaro Integration' hinzufuegen."
 fi

@@ -1,36 +1,56 @@
-# Enaro Shopping Home Assistant Integration
+# Enaro Home Assistant Integration
 
-Diese Custom Integration stellt pro Enaro-Haushalt automatisch eine eigene
-Home-Assistant-To-do-Liste bereit.
+Diese Custom Integration verbindet Home Assistant mit Enaro.
 
-Beispiel:
+Aktueller Umfang:
+
+- pro Enaro-Haushalt automatisch eine eigene Home-Assistant-To-do-Liste
+- Einkaufsartikel zwischen Home Assistant und Enaro synchronisieren
+- Home-Assistant-Sensorregeln erstellen automatisch Enaro-Aufgaben
+
+Beispiele:
 
 - `todo.enaro_zuhause_einkauf`
 - `todo.enaro_ferienwohnung_einkauf`
-
-Damit ist kein manuelles Mapping auf vorhandene HA-To-do-Listen noetig.
+- Rauchmelder `unavailable` -> wichtige Enaro-Aufgabe
 
 ## Installation
 
 1. Add-on-Repository `https://github.com/think-techDE/EnaroSync` in Home Assistant
    hinzufuegen.
-2. Add-on **Enaro Shopping Integration** installieren und starten.
+2. Add-on **Enaro Integration** installieren und starten.
 3. Home Assistant neu starten.
 4. **Einstellungen > Geraete & Dienste > Integration hinzufuegen**.
-5. `Enaro Shopping` auswaehlen.
+5. `Enaro Integration` auswaehlen.
 6. Enaro-API-URL, E-Mail und Passwort eintragen.
 
 Fuer lokale Entwicklung kann dieser Ordner alternativ direkt nach
 `config/custom_components/enaro_shopping` kopiert werden.
 
-## Verhalten
+## Einkaufslisten
 
 - Die Integration laedt alle Haushalte des Enaro-Nutzers.
 - Fuer jeden Haushalt wird eine eigene `todo.*`-Entitaet angelegt.
 - Artikel hinzufuegen, erledigen, wieder oeffnen, umbenennen und loeschen wird
   nach Enaro synchronisiert.
-- Enaro bleibt die Quelle fuer Einkaufslisten und Haushaltsrechte.
-- Die Integration pollt aktuell alle 60 Sekunden.
+
+## Sensorregeln
+
+Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
+verwaltet.
+
+Pro Regel werden konfiguriert:
+
+- HA-Entity
+- Zielzustand, z. B. `unavailable`
+- Enaro-Haushalt
+- Enaro-Mitglied als Zuständiger
+- ob die Aufgabe wichtig ist
+- Aufgabentitel und Notiz
+
+Die Integration erstellt erst nach 5 Minuten stabilem Zielzustand eine Aufgabe
+und nur einmal pro Stoerfall. Eine neue Aufgabe entsteht erst wieder, nachdem
+die Entity den Zielzustand verlassen und spaeter erneut erreicht hat.
 
 ## Warum Add-on plus Integration?
 

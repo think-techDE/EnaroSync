@@ -1,16 +1,18 @@
-# Enaro Shopping Integration
+# Enaro Integration
 
-Dieses Add-on ist der einzige Installationspunkt fuer die Enaro-Einkaufslisten
-in Home Assistant.
+Dieses Add-on ist der einzige Installationspunkt fuer die Enaro-Funktionen in
+Home Assistant.
 
 Es installiert oder aktualisiert die Custom Integration `enaro_shopping` unter
 `/config/custom_components/enaro_shopping`. Die Integration stellt danach pro
-Enaro-Haushalt automatisch eine eigene Home-Assistant-To-do-Liste bereit.
+Enaro-Haushalt automatisch eine eigene Home-Assistant-To-do-Liste bereit und
+kann aus Home-Assistant-Sensorzustaenden automatisch Enaro-Aufgaben erstellen.
 
 Beispiele:
 
 - `todo.enaro_zuhause_einkauf`
 - `todo.enaro_ferienwohnung_einkauf`
+- Rauchmelder `unavailable` -> wichtige Enaro-Aufgabe fuer eine Person
 
 ## Installation
 
@@ -18,14 +20,18 @@ Beispiele:
 2. Oben rechts **Repositorys** oeffnen.
 3. Repository-URL eintragen:
    `https://github.com/think-techDE/EnaroSync`
-4. Add-on **Enaro Shopping Integration** installieren.
+4. Add-on **Enaro Integration** installieren.
 5. Add-on starten.
 6. Home Assistant neu starten, falls `restart_homeassistant` nicht aktiviert war.
 7. **Einstellungen > Geraete & Dienste > Integration hinzufuegen**.
-8. `Enaro Shopping` auswaehlen und Enaro-API-URL, E-Mail und Passwort eintragen.
+8. `Enaro Integration` auswaehlen und Enaro-API-URL, E-Mail und Passwort eintragen.
 
 Danach erscheinen automatisch eigene To-do-Entitaeten fuer alle Enaro-Haushalte,
 auf die dieser Enaro-Nutzer Zugriff hat.
+
+Das Add-on beendet sich nach dem Kopieren der Integration absichtlich. Es muss
+nicht dauerhaft laufen und wird nur fuer Installation oder Updates erneut
+gestartet.
 
 ## Add-on-Optionen
 
@@ -43,8 +49,30 @@ restart_homeassistant: false
 - Ein Enaro-Haushalt = eine HA-To-do-Entitaet.
 - Artikel in HA anlegen, erledigen, wieder oeffnen, umbenennen und loeschen
   wird nach Enaro synchronisiert.
-- Enaro bleibt Quelle fuer Haushalte, Rechte und Einkaufslisten.
-- Die Integration pollt aktuell alle 60 Sekunden.
+- Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
+  gepflegt.
+- Pro Sensorregel wird nach 5 Minuten stabilem Zielzustand genau eine
+  Enaro-Aufgabe fuer den gewaehlten Stoerfall erstellt.
+- Enaro bleibt Quelle fuer Haushalte, Rechte, Einkaufslisten und Aufgaben.
+- Die Einkaufslisten-Integration pollt aktuell alle 60 Sekunden.
+
+## Sensorregeln
+
+Eine Regel besteht aus:
+
+- Home-Assistant-Entity, z. B. Rauchmelder-Sensor
+- Zielzustand, z. B. `unavailable`
+- Enaro-Haushalt
+- Enaro-Mitglied als Zuständiger
+- optional `Wichtig`
+- Aufgabentitel und Notiz-Vorlage
+
+Vorlagen koennen diese Platzhalter nutzen:
+
+- `{entity_id}`
+- `{entity_name}`
+- `{state}`
+- `{triggered_at}`
 
 ## Warum Add-on plus Integration?
 

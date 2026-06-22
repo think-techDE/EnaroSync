@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from aiohttp import ClientError, ClientSession
@@ -19,6 +20,17 @@ class EnaroHousehold:
 
     id: str
     name: str
+
+
+@dataclass(frozen=True)
+class EnaroHouseholdMember:
+    """Enaro household member visible to the configured account."""
+
+    id: str
+    household_id: str
+    display_name: str
+    role: str
+    is_virtual: bool
 
 
 @dataclass(frozen=True)
@@ -43,8 +55,17 @@ class EnaroShoppingList:
     items: list[EnaroShoppingItem]
 
 
+@dataclass(frozen=True)
+class EnaroTask:
+    """Enaro task."""
+
+    id: str
+    title: str
+    status: str
+
+
 class EnaroApiClient:
-    """Small async API client for Enaro shopping lists."""
+    """Small async API client for Enaro integration features."""
 
     def __init__(
         self,
@@ -66,11 +87,11 @@ class EnaroApiClient:
         payload = {
             "email": self._email,
             "password": self._password,
-            "device_id": "home-assistant-enaro-shopping-integration",
+            "device_id": "home-assistant-enaro-integration",
             "platform": "home_assistant",
-            "device_name": "Home Assistant Enaro Shopping",
-            "app_version": "ha-integration-0.1.0",
-            "app_build_number": "1",
+            "device_name": "Home Assistant Enaro Integration",
+            "app_version": "ha-integration-0.2.0",
+            "app_build_number": "2",
         }
         data = await self._request_raw("POST", "/api/v1/auth/login", json=payload)
         self._store_tokens(data)
@@ -84,8 +105,8 @@ class EnaroApiClient:
             "/api/v1/auth/refresh",
             json={
                 "refresh_token": self._refresh_token,
-                "app_version": "ha-integration-0.1.0",
-                "app_build_number": "1",
+                "app_version": "ha-integration-0.2.0",
+                "app_build_number": "2",
             },
         )
         self._store_tokens(data)
@@ -127,6 +148,52 @@ class EnaroApiClient:
             id=str(data["id"]),
             household=household,
             items=items,
+        )
+
+    async def async_list_members(
+        self,
+        household_id: str,
+    ) -> list[EnaroHouseholdMember]:
+        """Return all members of one Enaro household."""
+        data = await self._request("GET", f"/api/v1/households/{household_id}/members")
+        return [
+            EnaroHouseholdMember(
+                id=str(item["id"]),
+                household_id=str(item["household_id"]),
+                display_name=str(item["display_name"]),
+                role=str(item["role"]),
+                is_virtual=bool(item.get("is_virtual") or False),
+            )
+            for item in data
+        ]
+
+    async def async_create_task(
+        self,
+        household_id: str,
+        *,
+        title: str,
+        notes: str | None,
+        assigned_member_ids: list[str],
+        important: bool,
+        due_at: datetime,
+    ) -> EnaroTask:
+        """Create an Enaro task."""
+        data = await self._request(
+            "POST",
+            f"/api/v1/households/{household_id}/tasks",
+            json={
+                "title": title,
+                "notes": notes,
+                "assigned_member_ids": assigned_member_ids,
+                "important": important,
+                "due_at": due_at.isoformat(),
+                "points": 0,
+            },
+        )
+        return EnaroTask(
+            id=str(data["id"]),
+            title=str(data["title"]),
+            status=str(data.get("status") or "open"),
         )
 
     async def async_create_item(

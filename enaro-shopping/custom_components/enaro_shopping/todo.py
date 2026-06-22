@@ -15,7 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .api import EnaroShoppingItem, EnaroShoppingList
-from .const import DOMAIN
+from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EnaroShoppingCoordinator
 
 
@@ -25,7 +25,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Enaro shopping To-do entities."""
-    coordinator: EnaroShoppingCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: EnaroShoppingCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
     known_household_ids: set[str] = set()
 
     @callback

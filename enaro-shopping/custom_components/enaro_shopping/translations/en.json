@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Enaro Shopping",
-        "description": "Connect your Enaro account. Home Assistant will create one to-do list entity per Enaro household.",
+        "title": "Enaro Integration",
+        "description": "Connect your Enaro account. Home Assistant will create one to-do list entity per Enaro household and can create Enaro tasks from sensor rules.",
         "data": {
           "api_base_url": "Enaro API URL",
           "email": "Email",
@@ -18,6 +18,55 @@
     },
     "abort": {
       "already_configured": "This Enaro account is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Enaro Integration options",
+        "description": "Configured sensor rules: {rule_count}",
+        "menu_options": {
+          "add_rule": "Add sensor rule",
+          "toggle_rule": "Enable or disable sensor rule",
+          "remove_rule": "Remove sensor rule"
+        }
+      },
+      "add_rule": {
+        "title": "Add Enaro sensor rule",
+        "description": "Choose the Enaro household for the task that will be created.",
+        "data": {
+          "household_id": "Enaro household"
+        }
+      },
+      "add_rule_details": {
+        "title": "Sensor rule details",
+        "description": "Home Assistant creates one Enaro task after the entity stays in the target state for 5 minutes.",
+        "data": {
+          "enabled": "Enabled",
+          "entity_id": "Home Assistant entity",
+          "target_state": "Target state",
+          "member_id": "Assigned Enaro member",
+          "important": "Create as important task",
+          "title_template": "Task title",
+          "notes_template": "Task note"
+        }
+      },
+      "remove_rule": {
+        "title": "Remove Enaro sensor rule",
+        "data": {
+          "id": "Sensor rule"
+        }
+      },
+      "toggle_rule": {
+        "title": "Enable or disable Enaro sensor rule",
+        "data": {
+          "id": "Sensor rule",
+          "enabled": "Enabled"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to Enaro while loading households or members."
     }
   }
 }
