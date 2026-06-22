@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.2.5
+
+- Sensorregeln erscheinen jetzt als Home-Assistant-Entitaeten unter der Enaro
+  Integration.
+- Pro Sensorregel gibt es eine Status-Entitaet und einen Schalter zum
+  Aktivieren oder Deaktivieren.
+- Sensorregel-Status zeigt Zielzustand, aktuellen Zustand, letzte erzeugte
+  Aufgabe und Stoerfallstatus als Attribute.
+
+## 0.2.4
+
+- Sensorregeln senden bei Automations-Aufgaben jetzt auch dann eine
+  Enaro-Benachrichtigung, wenn der technische Enaro-Account selbst zustaendig
+  ist.
+- Home Assistant zeigt nach erfolgreicher oder fehlgeschlagener
+  Sensorregel-Ausloesung eine persistente Enaro-Meldung an.
+
+## 0.2.3
+
+- Add-on und Integration enthalten jetzt Enaro-Icon und Enaro-Logo fuer eine
+  professionellere Darstellung in Home Assistant.
+
 ## 0.2.2
 
 - Sensorregeln beruecksichtigen jetzt auch Zielzustaende, die beim Einrichten

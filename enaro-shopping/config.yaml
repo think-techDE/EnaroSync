@@ -1,6 +1,6 @@
 name: Enaro Integration
 description: Installiert die Enaro Integration fuer Einkaufslisten und automatische Enaro-Aufgaben aus Home Assistant
-version: "0.2.2"
+version: "0.2.5"
 slug: enaro_shopping
 init: false
 startup: once

@@ -51,6 +51,8 @@ restart_homeassistant: false
   wird nach Enaro synchronisiert.
 - Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
   gepflegt.
+- Sensorregeln erscheinen zusaetzlich als Home-Assistant-Entitaeten: ein
+  Status-Sensor und ein Aktivieren/Deaktivieren-Schalter pro Regel.
 - Pro Sensorregel wird nach 5 Minuten stabilem Zielzustand genau eine
   Enaro-Aufgabe fuer den gewaehlten Stoerfall erstellt.
 - Wenn der Zielzustand beim Einrichten bereits besteht, wird `last_changed` der

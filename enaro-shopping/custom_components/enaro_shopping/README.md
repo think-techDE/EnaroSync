@@ -38,6 +38,8 @@ Fuer lokale Entwicklung kann dieser Ordner alternativ direkt nach
 
 Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
 verwaltet.
+Jede Sensorregel erscheint zusaetzlich als eigene Home-Assistant-Entitaet: ein
+Status-Sensor und ein Schalter zum Aktivieren oder Deaktivieren.
 
 Pro Regel werden konfiguriert:
 

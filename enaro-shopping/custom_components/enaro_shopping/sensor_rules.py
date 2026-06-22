@@ -6,9 +6,11 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_state_change_event
 from homeassistant.helpers.storage import Store
 
@@ -55,6 +57,15 @@ class EnaroSensorRuleManager:
         self._rule_states: dict[str, dict[str, Any]] = {}
         self._timer_unsubs: dict[str, CALLBACK_TYPE] = {}
         self._state_unsub: CALLBACK_TYPE | None = None
+
+    @property
+    def rules(self) -> list[dict[str, Any]]:
+        """Return all configured sensor rules, including disabled rules."""
+        return sensor_rules_from_options(self.entry.options)
+
+    def rule_state(self, rule_id: str) -> dict[str, Any]:
+        """Return the persisted runtime state for one rule."""
+        return dict(self._rule_states.get(rule_id, {}))
 
     async def async_setup(self) -> None:
         """Set up state listeners for configured rules."""
@@ -204,6 +215,7 @@ class EnaroSensorRuleManager:
                 rule_id,
                 err,
             )
+            _notify_rule_failure(self.hass, rule_id, state, err)
             if _state_matches(state, rule):
                 self._schedule_rule(rule_id, SENSOR_RULE_RETRY_SECONDS)
             return
@@ -221,6 +233,7 @@ class EnaroSensorRuleManager:
             task.id,
             rule_id,
         )
+        _notify_rule_success(self.hass, rule_id, state, task.title)
 
     def _initialize_rule_states(self, rules: list[dict[str, Any]]) -> None:
         rule_ids = {rule[CONF_RULE_ID] for rule in rules}
@@ -264,12 +277,24 @@ class EnaroSensorRuleManager:
 
     async def _async_save(self) -> None:
         await self._store.async_save({"rules": self._rule_states})
+        async_dispatcher_send(self.hass, sensor_rule_signal(self.entry.entry_id))
+
+
+def sensor_rule_signal(entry_id: str) -> str:
+    """Return the dispatcher signal for sensor rule entity updates."""
+    return f"{DOMAIN}_sensor_rules_updated_{entry_id}"
+
+
+def sensor_rules_from_options(options: dict[str, Any]) -> list[dict[str, Any]]:
+    """Return all configured sensor rules from entry options."""
+    raw_rules = options.get(CONF_SENSOR_RULES, [])
+    return [dict(rule) for rule in raw_rules if isinstance(rule, dict)]
 
 
 def _configured_rules(options: dict[str, Any]) -> list[dict[str, Any]]:
     rules: list[dict[str, Any]] = []
-    for raw_rule in options.get(CONF_SENSOR_RULES, []):
-        if not isinstance(raw_rule, dict) or not raw_rule.get(CONF_RULE_ENABLED, True):
+    for raw_rule in sensor_rules_from_options(options):
+        if not raw_rule.get(CONF_RULE_ENABLED, True):
             continue
         rule = dict(raw_rule)
         required_values = [
@@ -322,6 +347,40 @@ def _render_template(
     except (KeyError, ValueError):
         LOGGER.warning("Invalid Enaro sensor rule template: %s", template)
         return fallback
+
+
+def _notify_rule_success(
+    hass: HomeAssistant,
+    rule_id: str,
+    state: State,
+    task_title: str,
+) -> None:
+    persistent_notification.async_create(
+        hass,
+        (
+            f"Enaro hat fuer {state.name or state.entity_id} "
+            f"die Aufgabe \"{task_title}\" erstellt."
+        ),
+        title="Enaro Integration",
+        notification_id=f"{DOMAIN}_sensor_rule_{rule_id}",
+    )
+
+
+def _notify_rule_failure(
+    hass: HomeAssistant,
+    rule_id: str,
+    state: State,
+    err: Exception,
+) -> None:
+    persistent_notification.async_create(
+        hass,
+        (
+            f"Die Enaro-Aufgabe fuer {state.name or state.entity_id} "
+            f"konnte nicht erstellt werden: {err}"
+        ),
+        title="Enaro Integration",
+        notification_id=f"{DOMAIN}_sensor_rule_error_{rule_id}",
+    )
 
 
 CALLBACK_TYPE = Any
