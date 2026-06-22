@@ -32,6 +32,7 @@ DEFAULT_SENSOR_RULE_NOTES_TEMPLATE = (
     "Home Assistant hat {entity_name} ({entity_id}) am {triggered_at} "
     "im Zustand {state} erkannt."
 )
+SENSOR_STATE_HISTORY_DAYS = 14
 SENSOR_RULE_DEBOUNCE_SECONDS = 300
 SENSOR_RULE_RETRY_SECONDS = 300
 

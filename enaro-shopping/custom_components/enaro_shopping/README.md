@@ -42,11 +42,17 @@ verwaltet.
 Pro Regel werden konfiguriert:
 
 - HA-Entity
-- Zielzustand, z. B. `unavailable`
+- Zielzustand aus den fuer diese Entity beobachteten Zustaenden, z. B.
+  `unavailable`
 - Enaro-Haushalt
 - Enaro-Mitglied als Zuständiger
 - ob die Aufgabe wichtig ist
 - Aufgabentitel und Notiz
+
+Beim Anlegen einer Regel wird zuerst die HA-Entity gewaehlt. Danach zeigt die
+Integration die aktuellen und, falls Recorder/History aktiv ist, die in den
+letzten 14 Tagen beobachteten Zustaende dieser Entity als Auswahl an. Wenn keine
+Historie vorhanden ist, bleibt eine freie Eingabe moeglich.
 
 Die Integration erstellt erst nach 5 Minuten stabilem Zielzustand eine Aufgabe
 und nur einmal pro Stoerfall. Eine neue Aufgabe entsteht erst wieder, nachdem

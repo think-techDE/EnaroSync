@@ -38,12 +38,18 @@
           "household_id": "Enaro household"
         }
       },
+      "add_rule_sensor": {
+        "title": "Choose Home Assistant entity",
+        "description": "Enaro will inspect this entity's current and recently recorded states before asking for the target state.",
+        "data": {
+          "entity_id": "Home Assistant entity"
+        }
+      },
       "add_rule_details": {
         "title": "Sensor rule details",
-        "description": "Home Assistant creates one Enaro task after the entity stays in the target state for 5 minutes.",
+        "description": "Choose one of the states observed for this entity. Home Assistant creates one Enaro task after the entity stays in that target state for 5 minutes.",
         "data": {
           "enabled": "Enabled",
-          "entity_id": "Home Assistant entity",
           "target_state": "Target state",
           "member_id": "Assigned Enaro member",
           "important": "Create as important task",

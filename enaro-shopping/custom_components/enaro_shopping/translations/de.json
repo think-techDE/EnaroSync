@@ -38,12 +38,18 @@
           "household_id": "Enaro-Haushalt"
         }
       },
+      "add_rule_sensor": {
+        "title": "Home-Assistant-Entity auswaehlen",
+        "description": "Enaro prueft danach den aktuellen und die zuletzt aufgezeichneten Zustaende dieser Entity, bevor du den Zielzustand waehlst.",
+        "data": {
+          "entity_id": "Home-Assistant-Entity"
+        }
+      },
       "add_rule_details": {
         "title": "Details der Sensorregel",
-        "description": "Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten im Zielzustand bleibt.",
+        "description": "Waehle einen Zustand, der fuer diese Entity beobachtet wurde. Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten in diesem Zielzustand bleibt.",
         "data": {
           "enabled": "Aktiviert",
-          "entity_id": "Home-Assistant-Entity",
           "target_state": "Zielzustand",
           "member_id": "Zustaendiges Enaro-Mitglied",
           "important": "Als wichtige Aufgabe erstellen",

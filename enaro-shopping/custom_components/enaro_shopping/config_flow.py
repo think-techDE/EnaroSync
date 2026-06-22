@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
+import logging
 from typing import Any
 from uuid import uuid4
 
@@ -13,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .api import EnaroApiClient, EnaroApiError, EnaroHousehold, EnaroHouseholdMember
 from .const import (
@@ -34,7 +37,10 @@ from .const import (
     DEFAULT_SENSOR_RULE_TARGET_STATE,
     DEFAULT_SENSOR_RULE_TITLE_TEMPLATE,
     DOMAIN,
+    SENSOR_STATE_HISTORY_DAYS,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class EnaroShoppingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -99,6 +105,7 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         self._config_entry = config_entry
         self._selected_household_id: str | None = None
+        self._selected_entity_id: str | None = None
 
     async def async_step_init(
         self,
@@ -130,7 +137,7 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None and not errors:
             self._selected_household_id = user_input[CONF_RULE_HOUSEHOLD_ID]
-            return await self.async_step_add_rule_details()
+            return await self.async_step_add_rule_sensor()
 
         return self.async_show_form(
             step_id="add_rule",
@@ -150,6 +157,29 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
             errors=errors,
         )
 
+    async def async_step_add_rule_sensor(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> config_entries.ConfigFlowResult:
+        """Choose the Home Assistant entity for a new sensor rule."""
+        if self._selected_household_id is None:
+            return await self.async_step_add_rule()
+
+        if user_input is not None:
+            self._selected_entity_id = user_input[CONF_RULE_ENTITY_ID]
+            return await self.async_step_add_rule_details()
+
+        return self.async_show_form(
+            step_id="add_rule_sensor",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_RULE_ENTITY_ID): selector.EntitySelector(
+                        selector.EntitySelectorConfig()
+                    )
+                }
+            ),
+        )
+
     async def async_step_add_rule_details(
         self,
         user_input: dict[str, Any] | None = None,
@@ -157,6 +187,8 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
         """Configure a new sensor rule."""
         if self._selected_household_id is None:
             return await self.async_step_add_rule()
+        if self._selected_entity_id is None:
+            return await self.async_step_add_rule_sensor()
 
         errors: dict[str, str] = {}
         try:
@@ -164,12 +196,13 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
         except (ConfigEntryAuthFailed, EnaroApiError):
             members = []
             errors["base"] = "cannot_connect"
+        observed_states = await self._async_observed_states(self._selected_entity_id)
 
         if user_input is not None and not errors:
             rule = {
                 CONF_RULE_ID: uuid4().hex,
                 CONF_RULE_ENABLED: user_input[CONF_RULE_ENABLED],
-                CONF_RULE_ENTITY_ID: user_input[CONF_RULE_ENTITY_ID],
+                CONF_RULE_ENTITY_ID: self._selected_entity_id,
                 CONF_RULE_HOUSEHOLD_ID: self._selected_household_id,
                 CONF_RULE_MEMBER_ID: user_input[CONF_RULE_MEMBER_ID],
                 CONF_RULE_TARGET_STATE: user_input[
@@ -196,13 +229,9 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_RULE_ENABLED, default=True): bool,
-                    vol.Required(CONF_RULE_ENTITY_ID): selector.EntitySelector(
-                        selector.EntitySelectorConfig()
+                    vol.Required(CONF_RULE_TARGET_STATE): _target_state_schema(
+                        observed_states
                     ),
-                    vol.Required(
-                        CONF_RULE_TARGET_STATE,
-                        default=DEFAULT_SENSOR_RULE_TARGET_STATE,
-                    ): str,
                     vol.Required(CONF_RULE_MEMBER_ID): _select_schema(
                         [
                             selector.SelectOptionDict(
@@ -311,6 +340,13 @@ class EnaroShoppingOptionsFlow(config_entries.OptionsFlow):
     async def _async_members(self, household_id: str) -> list[EnaroHouseholdMember]:
         return await self._async_client().async_list_members(household_id)
 
+    async def _async_observed_states(self, entity_id: str) -> list[str]:
+        states = set[str]()
+        if (current_state := self.hass.states.get(entity_id)) is not None:
+            states.add(current_state.state)
+        states.update(await _async_history_states(self.hass, entity_id))
+        return sorted(states, key=_state_sort_key)
+
 
 def _select_schema(options: list[selector.SelectOptionDict]) -> selector.SelectSelector:
     return selector.SelectSelector(
@@ -319,6 +355,19 @@ def _select_schema(options: list[selector.SelectOptionDict]) -> selector.SelectS
             mode=selector.SelectSelectorMode.DROPDOWN,
         )
     )
+
+
+def _target_state_schema(states: list[str]) -> vol.Any:
+    if not states:
+        return str
+    options = [
+        selector.SelectOptionDict(value=state, label=state)
+        for state in states
+        if state
+    ]
+    if not options:
+        return str
+    return _select_schema(options)
 
 
 def _rules_from_options(options: Mapping[str, Any]) -> list[dict[str, Any]]:
@@ -333,3 +382,56 @@ def _rule_label(rule: dict[str, Any]) -> str:
     enabled = bool(rule.get(CONF_RULE_ENABLED, True))
     prefix = "Aktiv" if enabled else "Inaktiv"
     return f"{prefix}: {entity_id} = {target_state} -> {title}"
+
+
+async def _async_history_states(hass, entity_id: str) -> list[str]:
+    try:
+        from homeassistant.components.recorder import get_instance, history
+        from homeassistant.components.recorder.util import session_scope
+    except ImportError:
+        return []
+
+    end_time = dt_util.utcnow()
+    start_time = end_time - timedelta(days=SENSOR_STATE_HISTORY_DAYS)
+
+    def _load_states() -> list[str]:
+        with session_scope(hass=hass, read_only=True) as session:
+            rows_by_entity = history.get_significant_states_with_session(
+                hass,
+                session,
+                start_time,
+                end_time,
+                [entity_id],
+                None,
+                True,
+                True,
+                True,
+                True,
+            )
+        return [_state_value(row) for row in rows_by_entity.get(entity_id, [])]
+
+    try:
+        return [
+            state
+            for state in await get_instance(hass).async_add_executor_job(_load_states)
+            if state
+        ]
+    except Exception as err:  # noqa: BLE001
+        LOGGER.debug("Could not load history states for %s: %s", entity_id, err)
+        return []
+
+
+def _state_value(row: Any) -> str:
+    if isinstance(row, dict):
+        return str(row.get("state") or "")
+    return str(getattr(row, "state", "") or "")
+
+
+def _state_sort_key(state: str) -> tuple[int, str]:
+    common_order = {
+        "unavailable": 0,
+        "unknown": 1,
+        "on": 2,
+        "off": 3,
+    }
+    return (common_order.get(state, 100), state)

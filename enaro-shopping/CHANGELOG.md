@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.1
+
+- Sensorregeln schlagen Zielzustaende jetzt aus den zuletzt beobachteten
+  Home-Assistant-Zustaenden der gewaehlten Entity vor.
+- Die aktuelle Entity-State wird immer beruecksichtigt; bei aktiviertem Recorder
+  werden zusaetzlich die letzten 14 Tage ausgewertet.
+
 ## 0.2.0
 
 - Sichtbare Umbenennung zu **Enaro Integration** bei kompatiblem internen Slug.

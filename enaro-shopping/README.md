@@ -61,11 +61,18 @@ restart_homeassistant: false
 Eine Regel besteht aus:
 
 - Home-Assistant-Entity, z. B. Rauchmelder-Sensor
-- Zielzustand, z. B. `unavailable`
+- Zielzustand aus den fuer diese Entity beobachteten Zustaenden, z. B.
+  `unavailable`
 - Enaro-Haushalt
 - Enaro-Mitglied als Zuständiger
 - optional `Wichtig`
 - Aufgabentitel und Notiz-Vorlage
+
+Beim Anlegen einer Regel prueft die Integration zuerst den aktuellen Zustand der
+ausgewaehlten Entity. Wenn Home Assistant Recorder/History aktiv ist, werden
+zusaetzlich die in den letzten 14 Tagen gespeicherten Zustaende ausgewertet und
+als Auswahl angeboten. Falls keine Historie vorhanden ist, bleibt eine freie
+Eingabe moeglich.
 
 Vorlagen koennen diese Platzhalter nutzen:
 
