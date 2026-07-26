@@ -48,7 +48,7 @@
       },
       "add_rule_details": {
         "title": "Sensor rule details",
-        "description": "Choose one of the states observed for this entity. Home Assistant creates one Enaro task after the entity stays in that target state for 5 minutes.",
+        "description": "Choose one of the states observed for this entity. Home Assistant creates one Enaro task after the entity stays in that target state for 5 minutes and removes the open task again when the state ends.",
         "data": {
           "alias": "Display name",
           "enabled": "Enabled",

@@ -59,6 +59,12 @@ restart_homeassistant: false
   und Entitaetsansicht nicht mit langen technischen Entity-IDs gefuellt wird.
 - Pro Sensorregel wird nach 5 Minuten stabilem Zielzustand genau eine
   Enaro-Aufgabe fuer den gewaehlten Stoerfall erstellt.
+- Wenn die Entity den Zielzustand wieder verlaesst, loescht die Integration die
+  generierte Enaro-Aufgabe automatisch, solange sie noch offen ist. Bereits
+  erledigte Aufgaben bleiben erhalten.
+- Wenn diese Bereinigung wegen API-/Netzproblemen nicht gelingt, bleibt die
+  bestehende Aufgabe verknuepft und es wird beim naechsten Stoerfall keine
+  doppelte Aufgabe erstellt.
 - Wenn der Zielzustand beim Einrichten bereits besteht, wird `last_changed` der
   Entity beruecksichtigt. Besteht der Zustand schon laenger als 5 Minuten, wird
   die Aufgabe direkt erstellt; andernfalls nach der verbleibenden Wartezeit.

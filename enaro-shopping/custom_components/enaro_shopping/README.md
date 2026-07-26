@@ -62,6 +62,11 @@ Historie vorhanden ist, bleibt eine freie Eingabe moeglich.
 Die Integration erstellt erst nach 5 Minuten stabilem Zielzustand eine Aufgabe
 und nur einmal pro Stoerfall. Eine neue Aufgabe entsteht erst wieder, nachdem
 die Entity den Zielzustand verlassen und spaeter erneut erreicht hat.
+Beim Verlassen des Zielzustands loescht die Integration die generierte
+Enaro-Aufgabe automatisch, solange sie noch offen ist. Bereits erledigte
+Aufgaben bleiben erhalten. Wenn die Bereinigung wegen API- oder Netzproblemen
+fehlschlaegt, bleibt die bestehende Aufgabe verknuepft und verhindert beim
+naechsten Stoerfall eine doppelte Aufgabe.
 
 Wenn die Entity beim Einrichten oder Neustart bereits im Zielzustand ist, wird
 `last_changed` beruecksichtigt. Besteht der Zustand schon laenger als 5 Minuten,

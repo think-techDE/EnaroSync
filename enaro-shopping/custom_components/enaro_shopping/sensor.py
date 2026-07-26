@@ -83,6 +83,8 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
         if not self._enabled:
             return "deaktiviert"
         state = self._runtime_state
+        if state.get("cleanup_pending"):
+            return "bereinigung_wartet"
         if state.get("task_created"):
             return "aufgabe_erstellt"
         if state.get("incident_active"):
@@ -95,6 +97,8 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
         if not self._enabled:
             return "mdi:toggle-switch-off-outline"
         state = self._runtime_state
+        if state.get("cleanup_pending"):
+            return "mdi:broom"
         if state.get("task_created"):
             return "mdi:clipboard-check-outline"
         if state.get("incident_active"):
@@ -121,6 +125,8 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
             "incident_active": bool(runtime.get("incident_active")),
             "task_created": bool(runtime.get("task_created")),
             "active_task_id": runtime.get("active_task_id"),
+            "cleanup_pending": bool(runtime.get("cleanup_pending")),
+            "last_cleanup_error": runtime.get("last_cleanup_error"),
             "last_task_created_at": runtime.get("last_task_created_at"),
         }
 
@@ -132,7 +138,7 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.2.7",
+            "sw_version": "0.2.8",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 

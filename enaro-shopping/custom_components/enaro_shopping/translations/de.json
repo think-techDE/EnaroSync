@@ -48,7 +48,7 @@
       },
       "add_rule_details": {
         "title": "Details der Sensorregel",
-        "description": "Waehle einen Zustand, der fuer diese Entity beobachtet wurde. Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten in diesem Zielzustand bleibt.",
+        "description": "Waehle einen Zustand, der fuer diese Entity beobachtet wurde. Home Assistant erstellt eine Enaro-Aufgabe, wenn die Entity 5 Minuten in diesem Zielzustand bleibt, und loescht die offene Aufgabe wieder, wenn der Zustand endet.",
         "data": {
           "alias": "Anzeigename",
           "enabled": "Aktiviert",

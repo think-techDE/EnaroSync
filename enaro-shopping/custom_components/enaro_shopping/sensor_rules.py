@@ -56,6 +56,7 @@ class EnaroSensorRuleManager:
         )
         self._rule_states: dict[str, dict[str, Any]] = {}
         self._timer_unsubs: dict[str, CALLBACK_TYPE] = {}
+        self._cleanup_timer_unsubs: dict[str, CALLBACK_TYPE] = {}
         self._state_unsub: CALLBACK_TYPE | None = None
 
     @property
@@ -98,6 +99,9 @@ class EnaroSensorRuleManager:
         for unsubscribe in self._timer_unsubs.values():
             unsubscribe()
         self._timer_unsubs.clear()
+        for unsubscribe in self._cleanup_timer_unsubs.values():
+            unsubscribe()
+        self._cleanup_timer_unsubs.clear()
         await self._async_save()
 
     @callback
@@ -126,14 +130,62 @@ class EnaroSensorRuleManager:
 
     async def _async_enter_target_state(self, rule: dict[str, Any]) -> None:
         rule_id = rule[CONF_RULE_ID]
+        self._cancel_cleanup_timer(rule_id)
         rule_state = self._rule_states.setdefault(rule_id, {})
         if rule_state.get("incident_active"):
             return
+        if rule_state.get("task_created") and rule_state.get("active_task_id"):
+            task_id = str(rule_state["active_task_id"])
+            try:
+                task = await self.client.async_get_task(task_id)
+            except EnaroApiError as err:
+                if err.status != 404:
+                    rule_state.update(
+                        {
+                            "incident_active": True,
+                            "cleanup_pending": False,
+                            "last_cleanup_error": str(err),
+                        }
+                    )
+                    await self._async_save()
+                    return
+                _clear_generated_task(rule_state)
+            except ConfigEntryAuthFailed as err:
+                rule_state.update(
+                    {
+                        "incident_active": True,
+                        "cleanup_pending": False,
+                        "last_cleanup_error": str(err),
+                    }
+                )
+                await self._async_save()
+                return
+            else:
+                if task.status == "done":
+                    _clear_generated_task(rule_state)
+                else:
+                    rule_state.update(
+                        {
+                            "incident_active": True,
+                            "cleanup_pending": False,
+                            "last_cleanup_error": None,
+                        }
+                    )
+                    await self._async_save()
+                    LOGGER.info(
+                        "Sensor rule %s entered target state again while "
+                        "generated task %s is still open",
+                        rule_id,
+                        task_id,
+                    )
+                    return
         rule_state.update(
             {
                 "incident_active": True,
                 "task_created": False,
                 "active_task_id": None,
+                "cleanup_pending": False,
+                "last_cleanup_error": None,
             }
         )
         await self._async_save()
@@ -142,14 +194,14 @@ class EnaroSensorRuleManager:
     async def _async_leave_target_state(self, rule: dict[str, Any]) -> None:
         rule_id = rule[CONF_RULE_ID]
         self._cancel_timer(rule_id)
+        self._cancel_cleanup_timer(rule_id)
         rule_state = self._rule_states.setdefault(rule_id, {})
-        rule_state.update(
-            {
-                "incident_active": False,
-                "task_created": False,
-                "active_task_id": None,
-            }
-        )
+        rule_state["incident_active"] = False
+        if await self._async_delete_generated_task(rule_id):
+            _clear_generated_task(rule_state)
+        else:
+            rule_state["cleanup_pending"] = True
+            self._schedule_cleanup_rule(rule_id, SENSOR_RULE_RETRY_SECONDS)
         await self._async_save()
 
     def _schedule_rule(self, rule_id: str, delay: int) -> None:
@@ -168,6 +220,25 @@ class EnaroSensorRuleManager:
 
     def _cancel_timer(self, rule_id: str) -> None:
         unsubscribe = self._timer_unsubs.pop(rule_id, None)
+        if unsubscribe is not None:
+            unsubscribe()
+
+    def _schedule_cleanup_rule(self, rule_id: str, delay: int) -> None:
+        self._cancel_cleanup_timer(rule_id)
+
+        @callback
+        def _cleanup(_now: datetime) -> None:
+            self._cleanup_timer_unsubs.pop(rule_id, None)
+            self.hass.async_create_task(self._async_cleanup_rule(rule_id))
+
+        self._cleanup_timer_unsubs[rule_id] = async_call_later(
+            self.hass,
+            max(0, delay),
+            _cleanup,
+        )
+
+    def _cancel_cleanup_timer(self, rule_id: str) -> None:
+        unsubscribe = self._cleanup_timer_unsubs.pop(rule_id, None)
         if unsubscribe is not None:
             unsubscribe()
 
@@ -235,6 +306,64 @@ class EnaroSensorRuleManager:
         )
         _notify_rule_success(self.hass, rule_id, state, task.title)
 
+    async def _async_cleanup_rule(self, rule_id: str) -> None:
+        rule = _rule_by_id(_configured_rules(self.entry.options), rule_id)
+        if rule is None:
+            return
+
+        state = self.hass.states.get(rule[CONF_RULE_ENTITY_ID])
+        rule_state = self._rule_states.setdefault(rule_id, {})
+        if state is None:
+            rule_state["incident_active"] = False
+            rule_state["cleanup_pending"] = True
+            self._schedule_cleanup_rule(rule_id, SENSOR_RULE_RETRY_SECONDS)
+            await self._async_save()
+            return
+
+        if _state_matches(state, rule):
+            rule_state.update(
+                {
+                    "incident_active": True,
+                    "cleanup_pending": False,
+                    "last_cleanup_error": None,
+                }
+            )
+            await self._async_save()
+            return
+
+        rule_state["incident_active"] = False
+        if await self._async_delete_generated_task(rule_id):
+            _clear_generated_task(rule_state)
+        else:
+            rule_state["cleanup_pending"] = True
+            self._schedule_cleanup_rule(rule_id, SENSOR_RULE_RETRY_SECONDS)
+        await self._async_save()
+
+    async def _async_delete_generated_task(self, rule_id: str) -> bool:
+        rule_state = self._rule_states.setdefault(rule_id, {})
+        task_id = rule_state.get("active_task_id")
+        if not rule_state.get("task_created") or not task_id:
+            return True
+
+        try:
+            await self.client.async_delete_open_task(str(task_id))
+        except (ConfigEntryAuthFailed, EnaroApiError) as err:
+            LOGGER.warning(
+                "Could not remove generated Enaro task %s for resolved sensor rule %s: %s",
+                task_id,
+                rule_id,
+                err,
+            )
+            rule_state["last_cleanup_error"] = str(err)
+            return False
+
+        LOGGER.info(
+            "Removed generated Enaro task %s after sensor rule %s returned to normal",
+            task_id,
+            rule_id,
+        )
+        return True
+
     def _initialize_rule_states(self, rules: list[dict[str, Any]]) -> None:
         rule_ids = {rule[CONF_RULE_ID] for rule in rules}
         self._rule_states = {
@@ -250,25 +379,29 @@ class EnaroSensorRuleManager:
             if matches:
                 rule_state["incident_active"] = True
                 rule_state.setdefault("task_created", False)
+                rule_state["cleanup_pending"] = False
+                rule_state["last_cleanup_error"] = None
             else:
-                rule_state.update(
-                    {
-                        "incident_active": False,
-                        "task_created": False,
-                        "active_task_id": None,
-                    }
-                )
+                rule_state["incident_active"] = False
+                if rule_state.get("task_created") and rule_state.get("active_task_id"):
+                    rule_state["cleanup_pending"] = True
+                else:
+                    _clear_generated_task(rule_state)
 
     def _schedule_matching_existing_states(self, rules: list[dict[str, Any]]) -> None:
         for rule in rules:
             rule_id = rule[CONF_RULE_ID]
             state = self.hass.states.get(rule[CONF_RULE_ENTITY_ID])
             rule_state = self._rule_states.setdefault(rule_id, {})
-            if (
-                state is None
-                or not _state_matches(state, rule)
-                or rule_state.get("task_created")
-            ):
+            if state is None:
+                continue
+            if not _state_matches(state, rule):
+                if rule_state.get("cleanup_pending") and rule_state.get(
+                    "active_task_id"
+                ):
+                    self._schedule_cleanup_rule(rule_id, 0)
+                continue
+            if rule_state.get("task_created"):
                 continue
             self._schedule_rule(
                 rule_id,
@@ -319,6 +452,17 @@ def _rule_by_id(rules: list[dict[str, Any]], rule_id: str) -> dict[str, Any] | N
 
 def _state_matches(state: State, rule: dict[str, Any]) -> bool:
     return state.state == str(rule[CONF_RULE_TARGET_STATE]).strip()
+
+
+def _clear_generated_task(rule_state: dict[str, Any]) -> None:
+    rule_state.update(
+        {
+            "task_created": False,
+            "active_task_id": None,
+            "cleanup_pending": False,
+            "last_cleanup_error": None,
+        }
+    )
 
 
 def _remaining_debounce_seconds(state: State, now: datetime) -> int:

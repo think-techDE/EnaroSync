@@ -86,8 +86,15 @@ class EnaroSensorRuleSwitchEntity(SwitchEntity):
             "alias": self._rule.get(CONF_RULE_ALIAS),
             "watched_entity_id": self._rule.get(CONF_RULE_ENTITY_ID),
             "target_state": self._rule.get(CONF_RULE_TARGET_STATE),
-            "incident_active": bool(self._manager.rule_state(self._rule_id).get("incident_active")),
-            "task_created": bool(self._manager.rule_state(self._rule_id).get("task_created")),
+            "incident_active": bool(
+                self._manager.rule_state(self._rule_id).get("incident_active")
+            ),
+            "task_created": bool(
+                self._manager.rule_state(self._rule_id).get("task_created")
+            ),
+            "cleanup_pending": bool(
+                self._manager.rule_state(self._rule_id).get("cleanup_pending")
+            ),
         }
 
     @property
@@ -98,7 +105,7 @@ class EnaroSensorRuleSwitchEntity(SwitchEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.2.7",
+            "sw_version": "0.2.8",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 

@@ -13,6 +13,10 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 class EnaroApiError(HomeAssistantError):
     """Raised when the Enaro API request fails."""
 
+    def __init__(self, message: str, *, status: int | None = None) -> None:
+        super().__init__(message)
+        self.status = status
+
 
 @dataclass(frozen=True)
 class EnaroHousehold:
@@ -90,8 +94,8 @@ class EnaroApiClient:
             "device_id": "home-assistant-enaro-integration",
             "platform": "home_assistant",
             "device_name": "Home Assistant Enaro Integration",
-            "app_version": "ha-integration-0.2.7",
-            "app_build_number": "8",
+            "app_version": "ha-integration-0.2.8",
+            "app_build_number": "9",
         }
         data = await self._request_raw("POST", "/api/v1/auth/login", json=payload)
         self._store_tokens(data)
@@ -105,8 +109,8 @@ class EnaroApiClient:
             "/api/v1/auth/refresh",
             json={
                 "refresh_token": self._refresh_token,
-                "app_version": "ha-integration-0.2.7",
-                "app_build_number": "8",
+                "app_version": "ha-integration-0.2.8",
+                "app_build_number": "9",
             },
         )
         self._store_tokens(data)
@@ -197,6 +201,39 @@ class EnaroApiClient:
             status=str(data.get("status") or "open"),
         )
 
+    async def async_get_task(self, task_id: str) -> EnaroTask:
+        """Return one Enaro task visible to the configured account."""
+        data = await self._request("GET", f"/api/v1/tasks/{task_id}")
+        return EnaroTask(
+            id=str(data["id"]),
+            title=str(data["title"]),
+            status=str(data.get("status") or "open"),
+        )
+
+    async def async_delete_task(self, task_id: str) -> None:
+        """Delete one Enaro task."""
+        await self._request("DELETE", f"/api/v1/tasks/{task_id}")
+
+    async def async_delete_open_task(self, task_id: str) -> bool:
+        """Delete a generated task if it still exists and is not completed."""
+        try:
+            task = await self.async_get_task(task_id)
+        except EnaroApiError as err:
+            if err.status == 404:
+                return True
+            raise
+
+        if task.status == "done":
+            return True
+
+        try:
+            await self.async_delete_task(task_id)
+        except EnaroApiError as err:
+            if err.status in (404, 409):
+                return True
+            raise
+        return True
+
     async def async_create_item(
         self,
         household_id: str,
@@ -280,7 +317,8 @@ class EnaroApiClient:
                 if response.status >= 400:
                     detail = await _response_error_text(response)
                     raise EnaroApiError(
-                        f"Enaro API {response.status} for {path}: {detail}"
+                        f"Enaro API {response.status} for {path}: {detail}",
+                        status=response.status,
                     )
                 if response.status == 204:
                     return None

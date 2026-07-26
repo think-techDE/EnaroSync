@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.8
+
+- Sensorregeln entfernen ihre generierte Enaro-Aufgabe automatisch, sobald die
+  Entity den Zielzustand wieder verlassen hat und die Aufgabe noch offen ist.
+- Erledigte generierte Aufgaben bleiben als Historie erhalten.
+- Falls die Bereinigung wegen API-/Netzproblemen fehlschlaegt, merkt sich die
+  Integration die bestehende Aufgabe und erzeugt beim naechsten Stoerfall keine
+  doppelte Aufgabe.
+
 ## 0.2.7
 
 - Sensorregeln unterstuetzen jetzt einen Anzeigenamen/Alias.
