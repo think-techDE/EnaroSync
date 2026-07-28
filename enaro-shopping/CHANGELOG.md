@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.9
+
+- Einkaufsartikel aus Home Assistant behalten bewusst gesetzte
+  Gross-/Kleinschreibung und bereinigen ueberfluessige Leerzeichen.
+- Vollstaendig kleingeschriebene Eintraege erhalten fuer eine besser lesbare
+  Darstellung automatisch einen grossen Anfangsbuchstaben.
+- Bereits vorhandene kleingeschriebene Eintraege werden in Home Assistant
+  lesbarer angezeigt, ohne die gespeicherte Einkaufshistorie umzuschreiben.
+
 ## 0.2.8
 
 - Sensorregeln entfernen ihre generierte Enaro-Aufgabe automatisch, sobald die

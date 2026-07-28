@@ -33,6 +33,8 @@ Fuer lokale Entwicklung kann dieser Ordner alternativ direkt nach
 - Fuer jeden Haushalt wird eine eigene `todo.*`-Entitaet angelegt.
 - Artikel hinzufuegen, erledigen, wieder oeffnen, umbenennen und loeschen wird
   nach Enaro synchronisiert.
+- Vollstaendig kleingeschriebene Artikelnamen erhalten einen gut lesbaren
+  Anfangsbuchstaben; bewusst gesetzte Gross-/Kleinschreibung bleibt erhalten.
 
 ## Sensorregeln
 

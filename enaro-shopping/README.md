@@ -51,6 +51,9 @@ restart_homeassistant: false
 - Ein Enaro-Haushalt = eine HA-To-do-Entitaet.
 - Artikel in HA anlegen, erledigen, wieder oeffnen, umbenennen und loeschen
   wird nach Enaro synchronisiert.
+- Vollstaendig kleingeschriebene Artikelnamen werden in Home Assistant mit
+  grossem Anfangsbuchstaben dargestellt. Bewusste Schreibweisen wie `iPhone`
+  oder `Coca-Cola` bleiben erhalten.
 - Sensorregeln werden unter **Geraete & Dienste > Enaro Integration > Optionen**
   gepflegt.
 - Sensorregeln erscheinen zusaetzlich als Home-Assistant-Entitaeten: ein

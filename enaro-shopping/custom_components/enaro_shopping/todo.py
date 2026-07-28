@@ -17,6 +17,7 @@ from homeassistant.util import slugify
 from .api import EnaroShoppingItem, EnaroShoppingList
 from .const import DATA_COORDINATOR, DOMAIN
 from .coordinator import EnaroShoppingCoordinator
+from .item_names import format_shopping_item_name
 
 
 async def async_setup_entry(
@@ -85,9 +86,12 @@ class EnaroShoppingTodoEntity(
         """Create an Enaro shopping item."""
         if not item.summary:
             return
+        name = format_shopping_item_name(item.summary)
+        if not name:
+            return
         created = await self.coordinator.client.async_create_item(
             self._household_id,
-            name=item.summary,
+            name=name,
             note=item.description,
         )
         if item.status == TodoItemStatus.COMPLETED:
@@ -101,9 +105,14 @@ class EnaroShoppingTodoEntity(
         """Update an Enaro shopping item."""
         if not item.uid:
             return
+        name = (
+            format_shopping_item_name(item.summary)
+            if item.summary is not None
+            else None
+        )
         await self.coordinator.client.async_update_item(
             item.uid,
-            name=item.summary,
+            name=name,
             note=item.description,
             status=_enaro_status_from_todo(item.status),
         )
@@ -132,7 +141,7 @@ class EnaroShoppingTodoEntity(
 def _todo_item_from_enaro(item: EnaroShoppingItem) -> TodoItem:
     return TodoItem(
         uid=item.id,
-        summary=item.name,
+        summary=format_shopping_item_name(item.name),
         status=_todo_status_from_enaro(item.status),
         description=item.note,
     )
