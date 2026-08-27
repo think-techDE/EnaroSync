@@ -72,7 +72,35 @@ restart_homeassistant: false
   Entity beruecksichtigt. Besteht der Zustand schon laenger als 5 Minuten, wird
   die Aufgabe direkt erstellt; andernfalls nach der verbleibenden Wartezeit.
 - Enaro bleibt Quelle fuer Haushalte, Rechte, Einkaufslisten und Aufgaben.
-- Die Einkaufslisten-Integration pollt aktuell alle 60 Sekunden.
+- Die Integration aktualisiert Einkaufslisten und Wanddisplay-Daten alle 30 Sekunden.
+
+## Wanddisplay
+
+Unter **Enaro > Einstellungen > Haushalt > Wanddisplay** wird zuerst festgelegt,
+welche Personen auf dem geschuetzten Home-Assistant-Dashboard erscheinen duerfen.
+Danach stellt die Integration pro Haushalt einen Summary-Sensor und pro
+freigegebener Person eine Aufgaben-To-do-Entitaet bereit. Virtuelle Personen
+werden als eigene Aufgabenliste abgebildet.
+
+Die mitgelieferte Karte wird beim Laden der Integration automatisch registriert:
+
+```yaml
+type: custom:enaro-wallboard-card
+entity: sensor.enaro_zuhause_wanddisplay
+```
+
+Fuer eine kompakte Erinnerung auf der Startansicht:
+
+```yaml
+type: custom:enaro-wallboard-card
+entity: sensor.enaro_zuhause_wanddisplay
+compact: true
+navigation_path: /flur-display/enaro
+```
+
+Bei einem API-Ausfall zeigt der Sensor den letzten erfolgreichen Stand mit
+Zeitstempel. Erledigen und Schlummern sind dann gesperrt. Die grossen Listen-
+Attribute werden nicht in den Home-Assistant-Recorder geschrieben.
 
 ## Sensorregeln
 

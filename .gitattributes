@@ -3,6 +3,7 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.dart text eol=lf
+*.swift text eol=lf
 *.kt text eol=lf
 *.kts text eol=lf
 *.md text eol=lf
@@ -20,6 +21,7 @@
 *.pbxproj text eol=lf
 *.xcconfig text eol=lf
 Dockerfile text eol=lf
+Podfile text eol=lf
 .dockerignore text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf

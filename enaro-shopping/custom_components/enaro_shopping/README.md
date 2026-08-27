@@ -7,6 +7,11 @@ Aktueller Umfang:
 - pro Enaro-Haushalt automatisch eine eigene Home-Assistant-To-do-Liste
 - Einkaufsartikel zwischen Home Assistant und Enaro synchronisieren
 - Home-Assistant-Sensorregeln erstellen automatisch Enaro-Aufgaben
+- geschuetztes Wanddisplay mit Summary-Sensor und Aufgabenlisten je Person
+
+Wanddisplay-Freigaben werden in Enaro unter
+`Einstellungen > Haushalt > Wanddisplay` verwaltet. Die gebuendelte Karte
+`custom:enaro-wallboard-card` benoetigt keine externe CDN-Ressource.
 
 Beispiele:
 

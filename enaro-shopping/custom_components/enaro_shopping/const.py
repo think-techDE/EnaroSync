@@ -24,9 +24,10 @@ CONF_RULE_TITLE_TEMPLATE = "title_template"
 
 DATA_COORDINATOR = "coordinator"
 DATA_SENSOR_RULE_MANAGER = "sensor_rule_manager"
+DATA_WALLBOARD_CARD_REGISTERED = "wallboard_card_registered"
 
 DEFAULT_API_BASE_URL = "https://api.think-smarter.eu"
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SENSOR_RULE_TARGET_STATE = "unavailable"
 DEFAULT_SENSOR_RULE_TITLE_TEMPLATE = "{entity_name} pruefen"
 DEFAULT_SENSOR_RULE_NOTES_TEMPLATE = (

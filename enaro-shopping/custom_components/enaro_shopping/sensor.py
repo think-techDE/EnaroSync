@@ -7,9 +7,10 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
@@ -23,9 +24,11 @@ from .const import (
     CONF_RULE_NOTES_TEMPLATE,
     CONF_RULE_TARGET_STATE,
     CONF_RULE_TITLE_TEMPLATE,
+    DATA_COORDINATOR,
     DATA_SENSOR_RULE_MANAGER,
     DOMAIN,
 )
+from .coordinator import EnaroShoppingCoordinator
 from .sensor_rules import EnaroSensorRuleManager, sensor_rule_signal, sensor_rules_from_options
 
 
@@ -42,6 +45,88 @@ async def async_setup_entry(
         EnaroSensorRuleStatusEntity(hass, entry, manager, rule)
         for rule in sensor_rules_from_options(entry.options)
     )
+    coordinator: EnaroShoppingCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
+    known_household_ids: set[str] = set()
+
+    @callback
+    def add_wallboard_entities() -> None:
+        new_entities = []
+        for household_id in coordinator.wallboards:
+            if household_id in known_household_ids:
+                continue
+            known_household_ids.add(household_id)
+            new_entities.append(
+                EnaroWallboardSummarySensor(coordinator, household_id)
+            )
+        if new_entities:
+            async_add_entities(new_entities)
+
+    add_wallboard_entities()
+    entry.async_on_unload(coordinator.async_add_listener(add_wallboard_entities))
+
+
+class EnaroWallboardSummarySensor(
+    CoordinatorEntity[EnaroShoppingCoordinator],
+    SensorEntity,
+):
+    """Aggregated, recorder-safe summary used by the wall display card."""
+
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:view-dashboard-outline"
+    _unrecorded_attributes = frozenset({"members", "tasks", "projects", "events"})
+
+    def __init__(
+        self,
+        coordinator: EnaroShoppingCoordinator,
+        household_id: str,
+    ) -> None:
+        super().__init__(coordinator)
+        self._household_id = household_id
+        wallboard = coordinator.wallboards[household_id]
+        household_name = str(wallboard.get("household_name") or "Enaro")
+        self._attr_name = f"{household_name} Wanddisplay"
+        self._attr_unique_id = f"enaro_wallboard_summary_{household_id}"
+        self.entity_id = f"sensor.enaro_{slugify(household_name)}_wanddisplay"
+
+    @property
+    def native_value(self) -> int:
+        """Return the current number of open wallboard tasks."""
+        return len(self._wallboard.get("tasks", []))
+
+    @property
+    def available(self) -> bool:
+        """Cached summaries remain readable while Enaro is offline."""
+        return bool(self._wallboard)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Expose the full aggregate without recording large list attributes."""
+        return {
+            **self._wallboard,
+            "online": self.coordinator.wallboard_online.get(
+                self._household_id,
+                False,
+            ),
+            "last_successful_at": self.coordinator.last_successful_at,
+        }
+
+    @property
+    def device_info(self) -> dict[str, Any]:
+        """Attach the summary to the Enaro integration device."""
+        return {
+            "identifiers": {(DOMAIN, self.coordinator.entry_id)},
+            "name": "Enaro Integration",
+            "manufacturer": "Think-Tech",
+            "model": "Enaro Home Assistant Integration",
+            "sw_version": "0.3.0",
+            "configuration_url": "https://github.com/think-techDE/EnaroSync",
+        }
+
+    @property
+    def _wallboard(self) -> dict[str, Any]:
+        return self.coordinator.wallboards.get(self._household_id, {})
 
 
 class EnaroSensorRuleStatusEntity(SensorEntity):
@@ -138,7 +223,7 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.2.8",
+            "sw_version": "0.3.0",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 

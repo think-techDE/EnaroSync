@@ -1,0 +1,23 @@
+snooze_task:
+  name: Enaro-Aufgabe schlummern
+  description: Blendet eine freigegebene Wanddisplay-Aufgabe bis morgen oder eine Woche aus.
+  target:
+    entity:
+      integration: enaro_shopping
+      domain: todo
+  fields:
+    uid:
+      name: Aufgaben-ID
+      required: true
+      selector:
+        text:
+    preset:
+      name: Zeitraum
+      required: true
+      selector:
+        select:
+          options:
+            - label: Bis morgen
+              value: tomorrow
+            - label: Eine Woche
+              value: week

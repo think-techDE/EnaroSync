@@ -2,10 +2,18 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import voluptuous as vol
+from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import StaticPathConfig
+from homeassistant.components.todo import DOMAIN as TODO_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .api import EnaroApiClient
 from .const import (
@@ -14,11 +22,28 @@ from .const import (
     CONF_PASSWORD,
     DATA_COORDINATOR,
     DATA_SENSOR_RULE_MANAGER,
+    DATA_WALLBOARD_CARD_REGISTERED,
     DOMAIN,
     PLATFORMS,
 )
 from .coordinator import EnaroShoppingCoordinator
 from .sensor_rules import EnaroSensorRuleManager
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Register integration-wide entity services."""
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "snooze_task",
+        entity_domain=TODO_DOMAIN,
+        schema={
+            vol.Required("uid"): cv.string,
+            vol.Required("preset"): vol.In(["tomorrow", "week"]),
+        },
+        func="async_snooze_task",
+    )
+    return True
 
 
 async def async_setup_entry(
@@ -32,7 +57,8 @@ async def async_setup_entry(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
     )
-    coordinator = EnaroShoppingCoordinator(hass, client)
+    coordinator = EnaroShoppingCoordinator(hass, client, entry.entry_id)
+    await coordinator.async_load_wallboard_cache()
     await coordinator.async_config_entry_first_refresh()
     sensor_rule_manager = EnaroSensorRuleManager(hass, entry, client)
     await sensor_rule_manager.async_setup()
@@ -46,6 +72,7 @@ async def async_setup_entry(
         DATA_COORDINATOR: coordinator,
         DATA_SENSOR_RULE_MANAGER: sensor_rule_manager,
     }
+    await _async_register_wallboard_card(hass)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(
         entry,
@@ -75,3 +102,25 @@ async def _async_update_listener(
 ) -> None:
     """Reload the integration when options change."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def _async_register_wallboard_card(hass: HomeAssistant) -> None:
+    """Serve and register the bundled wallboard card once per HA runtime."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    if domain_data.get(DATA_WALLBOARD_CARD_REGISTERED):
+        return
+    card_path = Path(__file__).parent / "www" / "enaro-wallboard-card.js"
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                "/enaro_shopping/enaro-wallboard-card.js",
+                str(card_path),
+                False,
+            )
+        ]
+    )
+    add_extra_js_url(
+        hass,
+        "/enaro_shopping/enaro-wallboard-card.js?v=0.3.0",
+    )
+    domain_data[DATA_WALLBOARD_CARD_REGISTERED] = True

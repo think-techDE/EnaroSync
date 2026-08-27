@@ -84,5 +84,21 @@
     "error": {
       "cannot_connect": "Could not connect to Enaro while loading households or members."
     }
+  },
+  "services": {
+    "snooze_task": {
+      "name": "Snooze Enaro task",
+      "description": "Hides a shared wallboard task until tomorrow or for one week without changing its due date.",
+      "fields": {
+        "uid": {
+          "name": "Task ID",
+          "description": "Internal ID of the shared Enaro task."
+        },
+        "preset": {
+          "name": "Duration",
+          "description": "Snooze until tomorrow or for one week."
+        }
+      }
+    }
   }
 }

@@ -105,7 +105,7 @@ class EnaroSensorRuleSwitchEntity(SwitchEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.2.8",
+            "sw_version": "0.3.0",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 

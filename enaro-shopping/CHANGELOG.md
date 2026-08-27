@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+- Gemeinsames Enaro-Wanddisplay pro Haushalt mit gecachtem Offline-Stand.
+- Summary-Sensor und reine Aufgaben-To-do-Entitaeten je freigegebener Person.
+- Aufgaben koennen bestaetigt erledigt oder bis morgen/eine Woche geschlummert werden.
+- Virtuelle Personen, Rotationen, Projekte, Termine, Mahlzeiten und Einkaufskurzinfo.
+- Gebuendelte responsive `custom:enaro-wallboard-card` ohne externe CDN-Abhaengigkeit.
+- Polling-Intervall fuer den gemeinsamen Dashboard-Stand auf 30 Sekunden reduziert.
+- Lokale Markenbilder liegen zusaetzlich im aktuellen Home-Assistant-`brand/`-Format.
+
 ## 0.2.9
 
 - Einkaufsartikel aus Home Assistant behalten bewusst gesetzte

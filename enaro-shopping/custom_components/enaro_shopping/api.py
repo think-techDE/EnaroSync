@@ -94,8 +94,8 @@ class EnaroApiClient:
             "device_id": "home-assistant-enaro-integration",
             "platform": "home_assistant",
             "device_name": "Home Assistant Enaro Integration",
-            "app_version": "ha-integration-0.2.8",
-            "app_build_number": "9",
+            "app_version": "ha-integration-0.3.0",
+            "app_build_number": "10",
         }
         data = await self._request_raw("POST", "/api/v1/auth/login", json=payload)
         self._store_tokens(data)
@@ -109,8 +109,8 @@ class EnaroApiClient:
             "/api/v1/auth/refresh",
             json={
                 "refresh_token": self._refresh_token,
-                "app_version": "ha-integration-0.2.8",
-                "app_build_number": "9",
+                "app_version": "ha-integration-0.3.0",
+                "app_build_number": "10",
             },
         )
         self._store_tokens(data)
@@ -170,6 +170,48 @@ class EnaroApiClient:
             )
             for item in data
         ]
+
+    async def async_get_wallboard(self, household_id: str) -> dict[str, Any]:
+        """Return the shared wallboard summary for one household."""
+        data = await self._request(
+            "GET",
+            f"/api/v1/households/{household_id}/wallboard",
+        )
+        return dict(data)
+
+    async def async_complete_wallboard_task(
+        self,
+        household_id: str,
+        task_id: str,
+        *,
+        completed_by_member_id: str,
+        client_request_id: str,
+    ) -> dict[str, Any]:
+        """Complete one wallboard task for the selected Enaro member."""
+        data = await self._request(
+            "POST",
+            f"/api/v1/households/{household_id}/wallboard/tasks/{task_id}/complete",
+            json={
+                "completed_by_member_id": completed_by_member_id,
+                "client_request_id": client_request_id,
+            },
+        )
+        return dict(data)
+
+    async def async_snooze_wallboard_task(
+        self,
+        household_id: str,
+        task_id: str,
+        *,
+        preset: str,
+    ) -> dict[str, Any]:
+        """Snooze one wallboard task without changing its due date."""
+        data = await self._request(
+            "POST",
+            f"/api/v1/households/{household_id}/wallboard/tasks/{task_id}/snooze",
+            json={"preset": preset},
+        )
+        return dict(data)
 
     async def async_create_task(
         self,

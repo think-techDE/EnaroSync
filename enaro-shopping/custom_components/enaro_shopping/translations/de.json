@@ -84,5 +84,21 @@
     "error": {
       "cannot_connect": "Enaro konnte beim Laden der Haushalte oder Mitglieder nicht erreicht werden."
     }
+  },
+  "services": {
+    "snooze_task": {
+      "name": "Enaro-Aufgabe schlummern",
+      "description": "Blendet eine freigegebene Wanddisplay-Aufgabe bis morgen oder eine Woche aus, ohne ihre Faelligkeit zu aendern.",
+      "fields": {
+        "uid": {
+          "name": "Aufgaben-ID",
+          "description": "Interne ID der freigegebenen Enaro-Aufgabe."
+        },
+        "preset": {
+          "name": "Zeitraum",
+          "description": "Schlummerzeitraum: bis morgen oder eine Woche."
+        }
+      }
+    }
   }
 }
