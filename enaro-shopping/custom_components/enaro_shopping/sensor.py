@@ -120,7 +120,7 @@ class EnaroWallboardSummarySensor(
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.3.0",
+            "sw_version": "0.3.1",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 
@@ -223,7 +223,7 @@ class EnaroSensorRuleStatusEntity(SensorEntity):
             "name": "Enaro Integration",
             "manufacturer": "Think-Tech",
             "model": "Enaro Home Assistant Integration",
-            "sw_version": "0.3.0",
+            "sw_version": "0.3.1",
             "configuration_url": "https://github.com/think-techDE/EnaroSync",
         }
 

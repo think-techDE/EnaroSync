@@ -121,6 +121,6 @@ async def _async_register_wallboard_card(hass: HomeAssistant) -> None:
     )
     add_extra_js_url(
         hass,
-        "/enaro_shopping/enaro-wallboard-card.js?v=0.3.0",
+        "/enaro_shopping/enaro-wallboard-card.js?v=0.3.1",
     )
     domain_data[DATA_WALLBOARD_CARD_REGISTERED] = True

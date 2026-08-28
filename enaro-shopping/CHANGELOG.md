@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.1
+
+- Wanddisplay-Karte bleibt bei wiederholter Home-Assistant-Konfiguration stabil.
+- Doppelte beziehungsweise cache-bedingte Kartenregistrierung erzeugt keinen
+  Lovelace-Konfigurationsfehler mehr.
+- Cache-Buster fuer die gebuendelte Wanddisplay-Karte aktualisiert.
+
 ## 0.3.0
 
 - Gemeinsames Enaro-Wanddisplay pro Haushalt mit gecachtem Offline-Stand.

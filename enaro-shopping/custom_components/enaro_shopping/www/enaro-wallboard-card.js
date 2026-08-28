@@ -1,10 +1,17 @@
+(() => {
 class EnaroWallboardCard extends HTMLElement {
   setConfig(config) {
     if (!config || !config.entity) {
       throw new Error("Enaro wallboard card requires a summary sensor entity");
     }
     this.config = config;
-    this.attachShadow({ mode: "open" });
+    // Home Assistant may configure an existing card again after navigation or
+    // a dashboard update. A second attachShadow() call throws and is rendered
+    // as a generic Lovelace configuration error.
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+    }
+    this._render();
   }
 
   set hass(hass) {
@@ -314,12 +321,37 @@ class EnaroWallboardCard extends HTMLElement {
   }
 }
 
-customElements.define("enaro-wallboard-card", EnaroWallboardCard);
+const cardTagName = "enaro-wallboard-card";
+const registeredCard = customElements.get(cardTagName);
+
+if (registeredCard) {
+  // Integration updates can load a new cache-busted script in an existing HA
+  // frontend session. Refresh the registered prototype instead of throwing on
+  // a duplicate customElements.define() call.
+  for (const propertyName of Object.getOwnPropertyNames(
+    EnaroWallboardCard.prototype
+  )) {
+    if (propertyName === "constructor") continue;
+    Object.defineProperty(
+      registeredCard.prototype,
+      propertyName,
+      Object.getOwnPropertyDescriptor(
+        EnaroWallboardCard.prototype,
+        propertyName
+      )
+    );
+  }
+} else {
+  customElements.define(cardTagName, EnaroWallboardCard);
+}
 
 window.customCards = window.customCards || [];
-window.customCards.push({
-  type: "enaro-wallboard-card",
-  name: "Enaro Wanddisplay",
-  description: "Gemeinsame Aufgaben, Rotationen, Termine und Einkauf aus Enaro.",
-  preview: true,
-});
+if (!window.customCards.some((card) => card.type === cardTagName)) {
+  window.customCards.push({
+    type: cardTagName,
+    name: "Enaro Wanddisplay",
+    description: "Gemeinsame Aufgaben, Rotationen, Termine und Einkauf aus Enaro.",
+    preview: true,
+  });
+}
+})();

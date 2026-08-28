@@ -94,8 +94,8 @@ class EnaroApiClient:
             "device_id": "home-assistant-enaro-integration",
             "platform": "home_assistant",
             "device_name": "Home Assistant Enaro Integration",
-            "app_version": "ha-integration-0.3.0",
-            "app_build_number": "10",
+            "app_version": "ha-integration-0.3.1",
+            "app_build_number": "11",
         }
         data = await self._request_raw("POST", "/api/v1/auth/login", json=payload)
         self._store_tokens(data)
@@ -109,8 +109,8 @@ class EnaroApiClient:
             "/api/v1/auth/refresh",
             json={
                 "refresh_token": self._refresh_token,
-                "app_version": "ha-integration-0.3.0",
-                "app_build_number": "10",
+                "app_version": "ha-integration-0.3.1",
+                "app_build_number": "11",
             },
         )
         self._store_tokens(data)
